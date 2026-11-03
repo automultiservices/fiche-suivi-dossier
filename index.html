@@ -87,9 +87,10 @@ main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:8px max(16px,env(sa
 .kv dd{margin:0;min-width:0}
 .kv input{width:100%;font:500 15px var(--f-body);color:var(--ink);border:1.5px solid transparent;border-radius:6px;padding:5px 7px;margin-left:-8px;background:transparent}
 .kv input:hover{background:var(--chrome)}
+.kv input::placeholder{color:#b5791f;font-style:italic;font-weight:400}
 .kv input:focus{border-color:var(--ink);background:#fff;outline:none}
 .kv .txt{font:500 15px var(--f-body);padding:5px 0}
-.buy{display:grid;grid-template-columns:1fr 210px 150px 30px;gap:2px 8px;align-items:center}
+.buy{display:grid;grid-template-columns:24px 1fr 210px 150px 30px;gap:2px 8px;align-items:center}
 .buy input{width:100%;font:500 15px var(--f-body);border:1.5px solid transparent;border-radius:6px;padding:5px 7px;background:transparent}
 .buy input:hover{background:var(--chrome)}
 .buy input:focus{border-color:var(--ink);background:#fff;outline:none}
@@ -101,6 +102,14 @@ main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:8px max(16px,env(sa
 .buy .rm:hover{background:#fdecea}
 .qrm{border:0;background:none;color:#a33;font-size:18px;line-height:1;cursor:pointer;padding:0 4px;margin-left:8px;border-radius:6px;vertical-align:middle}
 .qrm:hover{background:#fdecea}
+.sel{width:17px;height:17px;margin:0;accent-color:var(--ink);cursor:pointer}
+.q-h .sel{margin-right:8px;vertical-align:-3px}
+.mergebar{position:sticky;top:8px;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:10px;padding:8px 10px 8px 14px;margin-bottom:10px;font-weight:600}
+.mergebar span{margin-right:auto}
+.mergebar .tbtn{background:#fff;color:var(--ink)}
+.mergebar .ghost{background:transparent;color:#fff;border-color:#6b7280}
+.buy .unm{border:0;background:none;color:var(--muted);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0;justify-self:start}
+.buy .mg{grid-column:2/-1;margin:-2px 0 4px 7px}
 .addbtn{margin-top:10px;width:100%;border:1.5px dashed var(--line);background:#fff;border-radius:8px;padding:9px 12px;font:600 14px var(--f-body);color:var(--ink);cursor:pointer}
 .addbtn:hover{border-color:var(--ink)}
 .q .pill.other{border-style:dashed}
@@ -297,7 +306,7 @@ tbody tr:last-child td{border-bottom:0}
         </div>
         <div class="blk todo" id="blk-todo"><h3><span class="dot"></span><span id="todo-t">À vérifier</span></h3><div id="todo"></div></div>
         <div class="blk done"><h3><span class="dot"></span>Rempli depuis l'AR</h3><dl class="kv" id="kv"></dl></div>
-        <div class="blk done" id="blk-buy"><h3><span class="dot"></span>Achats</h3><div class="buy" id="buy"></div><button class="addbtn" type="button" id="btn-add">+ Ajouter une ligne (article + fournisseur)</button></div>
+        <div class="blk done" id="blk-buy"><h3><span class="dot"></span>Achats</h3><div class="mergebar" id="mergebar" hidden><span id="merge-n"></span><button type="button" class="tbtn" id="btn-merge">Regrouper en une seule commande</button><button type="button" class="ghost" id="btn-unsel">Annuler</button></div><div class="buy" id="buy"></div><p class="hint" style="margin:8px 0 0">Plusieurs lignes commandées ensemble chez le même fournisseur ? Cochez-les puis « Regrouper » : une seule ligne et un seul tableau au verso.</p><button class="addbtn" type="button" id="btn-add">+ Ajouter une ligne (article + fournisseur)</button></div>
       </div>
       <div class="foot-act">
         <button class="print" type="button" id="btn-print">Imprimer la fiche</button>
@@ -516,7 +525,7 @@ tbody tr:last-child td{border-bottom:0}
     + 'ruban rubans support supports bac bacs caisse caisses rangement rangements systeme systemes module modules cle cles double simple '
     + 'blanc blanche noir noire gris grise rouge orange jaune vert bleu chrome vehicule vehicules utilitaire neuf client contremarque reference '
     + 'disponibilite dispo commande devis livraison janvier fevrier mars avril mai juin juillet aout septembre octobre novembre decembre '
-    + 'rouleau rouleaux debut fin mi entre semaine et cablage faisceau interrupteur fusible fusibles electrique electriques 12v 24v 230v usb').split(' ');
+    + 'terrassement transport transports services service batiment btp travaux publics plomberie chauffage electricite electricien menuiserie maconnerie peinture couverture charpente paysage paysagiste espaces verts nettoyage location logistique livraison demenagement depannage maintenance energie solaire reseaux telecom fibre securite environnement assainissement voirie construction renovation agence groupe france ile ouest est nord sud centre mairie ville commune departement conseil regional syndicat rouleau rouleaux debut fin mi entre semaine et cablage faisceau interrupteur fusible fusibles electrique electriques 12v 24v 230v usb').split(' ');
   var vocab = {};
   function addVocab(w) { w = sq(w); if (w.length >= 1) vocab[w] = 1; }
   VOCAB_BASE.forEach(addVocab);
@@ -605,8 +614,6 @@ tbody tr:last-child td{border-bottom:0}
     if (!numCde) out.flags.n_cde = 'Pas trouvé sur l\'AR.';
     var md = all.replace(/\s+/g, ' ').match(/Devis\s*N[°o]\s*:?\s*([A-Z]{2,4}-?\s?\d{5,})/i);
     if (md) set('n_devis', md[1].replace(/\s/g, ''));
-    else out.flags.n_devis = 'Pas trouvé sur l\'AR.';
-    F.ar_env = true;
 
     /* ---------- CLIENT (bloc adresse à droite) ---------- */
     var cmdY = (p1.find(function (i) { return /^Commande$/.test(i.s.trim()); }) || { y: 230 }).y;
@@ -1058,11 +1065,11 @@ function getField(k){
   var el=$(k); return el ? (el.type==='checkbox'?el.checked:el.value) : '';
 }
 
-var state={ flags:{}, achats:[], clientKey:'', pdfUrl:null, answered:{} };
+var state={ flags:{}, achats:[], clientKey:'', pdfUrl:null, answered:{}, sel:{} };
 var LABELS={ agence:'Agence', type_client:'Type de client', client_nom:'Client', vendeur:'Vendeur', n_devis:'N° devis', n_cde:'N° commande',
-  ref_dossier_client:'Réf. client', contremarque:'Contremarque', marque:'Marque', specificite:'Modèle', annee:'Année', n_serie:'N° de série', immat:'Immatriculation', d_dispo:'Dispo le' };
+  ref_dossier_client:'Réf. client', contremarque:'Contremarque', marque:'Marque', specificite:'Modèle', annee:'Année', n_serie:'N° de série', immat:'Immatriculation', d_dispo:'Dispo le', n_bl:'N° BL' };
 var CHOICES={ agence:['Chartres','IDF','Est','Normandie','Evreux / Ouest'], type_client:['Concessionnaire','Client direct','Transfo','Distributeur'] };
-var KV_ORDER=['agence','type_client','client_nom','vendeur','n_devis','n_cde','ref_dossier_client','contremarque','marque','specificite','annee','n_serie','immat','d_dispo'];
+var KV_ORDER=['agence','type_client','client_nom','vendeur','n_devis','n_cde','n_bl','ref_dossier_client','contremarque','marque','specificite','annee','n_serie','immat','d_dispo'];
 
 /* ---------- lecture du PDF ---------- */
 async function readPdf(file){
@@ -1096,7 +1103,7 @@ async function handleFile(file){
 
 /* ---------- remplissage ---------- */
 function apply(res){
-  $('fiche').reset(); state.flags={}; state.answered={};
+  $('fiche').reset(); state.flags={}; state.answered={}; state.sel={};
   var F=res.fields;
   Object.keys(F).forEach(function(k){ setField(k,F[k]); });
   Object.keys(res.flags).forEach(function(k){ state.flags[k]=res.flags[k]; });
@@ -1118,10 +1125,11 @@ function apply(res){
   $('screen-drop').hidden=true; $('screen-res').hidden=false; $('btn-new').hidden=false; window.scrollTo(0,0);
 }
 
+function ordered(){ return state.achats.map(function(a,i){ return {a:a,k:a.pos!=null?a.pos:i}; }).sort(function(x,y){ return x.k-y.k; }).map(function(x){ return x.a; }); }
 function isStock(c){ return /^(stock\s*)?ams$/i.test(String(c||'').trim()); }
 function artTxt(a){ return a.label+(a.code?' · Réf. '+a.code:''); }
 function writeAchats(){
-  var list=state.achats.filter(function(a){ return !a.removed && !isStock(a.choice) && (String(a.label||'').trim() || String(a.choice||'').trim()); });
+  var list=ordered().filter(function(a){ return !a.removed && !isStock(a.choice) && (String(a.label||'').trim() || String(a.choice||'').trim()); });
   if(list.length>NB){ // regroupe par fournisseur pour tenir sur NB lignes
     var by={},order=[]; list.forEach(function(a){ var k=a.choice||('?'+a.label); if(!by[k]){ by[k]={label:[],choice:a.choice}; order.push(k);} by[k].label.push(artTxt(a)); });
     list=order.map(function(k){ return {label:by[k].label.join(' + '),choice:by[k].choice,code:''}; });
@@ -1157,15 +1165,17 @@ function render(){
 
   // Rempli
   var flagged=state.flags;
-  $('kv').innerHTML=KV_ORDER.filter(function(k){ return !(k in flagged) && getField(k); }).map(function(k){
-    return '<dt>'+esc(LABELS[k])+'</dt><dd><input data-k="'+k+'" value="'+esc(getField(k))+'" aria-label="'+esc(LABELS[k])+'"></dd>';
+  var ALWAYS={n_devis:'À saisir si absent de l\'AR',n_bl:'À saisir si connu',contremarque:'À saisir si connue',d_dispo:'jj/mm/aa'};
+  $('kv').innerHTML=KV_ORDER.filter(function(k){ return !(k in flagged) && (getField(k) || ALWAYS[k]); }).map(function(k){
+    return '<dt>'+esc(LABELS[k])+'</dt><dd><input data-k="'+k+'" value="'+esc(getField(k))+'" placeholder="'+esc(ALWAYS[k]||'')+'" aria-label="'+esc(LABELS[k])+'"></dd>';
   }).join('') + extraKv();
 
   // Achats
-  var sure=state.achats.map(function(a,i){ return {a:a,i:i}; }).filter(function(o){ return !o.a.ask && !o.a.removed; });
+  var sure=state.achats.map(function(a,i){ return {a:a,i:i}; }).sort(function(x,y){ return (x.a.pos!=null?x.a.pos:x.i)-(y.a.pos!=null?y.a.pos:y.i); }).filter(function(o){ return !o.a.ask && !o.a.removed; });
   $('blk-buy').hidden=false;
-  $('buy').innerHTML=sure.length ? sure.map(function(o){ return '<input data-a="'+o.i+'" data-p="label" value="'+esc(o.a.label)+'" placeholder="Prestation / article" aria-label="Article"><input class="sup" data-a="'+o.i+'" data-p="choice" list="dl-four" value="'+esc(o.a.choice)+'" placeholder="Fournisseur" aria-label="Fournisseur"><input class="code" data-a="'+o.i+'" data-p="code" value="'+esc(o.a.code||'')+'" placeholder="Code article (facult.)" aria-label="Code article"><button type="button" class="rm" data-rm="'+o.i+'" title="Retirer cette ligne" aria-label="Retirer cette ligne">×</button>'; }).join('')
+  $('buy').innerHTML=sure.length ? sure.map(function(o){ return '<input type="checkbox" class="sel" data-sel="'+o.i+'"'+(state.sel[o.i]?' checked':'')+' aria-label="Choisir pour regrouper"><input data-a="'+o.i+'" data-p="label" value="'+esc(o.a.label)+'" placeholder="Prestation / article" aria-label="Article"><input class="sup" data-a="'+o.i+'" data-p="choice" list="dl-four" value="'+esc(o.a.choice)+'" placeholder="Fournisseur" aria-label="Fournisseur"><input class="code" data-a="'+o.i+'" data-p="code" value="'+esc(o.a.code||'')+'" placeholder="Code article (facult.)" aria-label="Code article"><button type="button" class="rm" data-rm="'+o.i+'" title="Retirer cette ligne" aria-label="Retirer cette ligne">×</button>'+(o.a.parts?'<div class="mg"><button type="button" class="unm" data-unm="'+o.i+'">Séparer ces '+o.a.parts.length+' lignes</button></div>':''); }).join('')
     : '<div class="empty">Aucun achat lu sur l\'AR.</div>';
+  updateMerge();
 }
 function extraKv(){
   var h='';
@@ -1189,7 +1199,7 @@ function qAchat(a,i){
       +'<button type="button" class="pill other" data-ach="'+i+'" data-other="1" aria-pressed="'+(!!a.other)+'">Autre…</button></div>'
       +'<div class="sub"><input class="othr" data-ach="'+i+'" list="dl-four" value="'+esc(a.other?a.choice:'')+'" placeholder="Nom du fournisseur" aria-label="Autre fournisseur"'+(a.other?'':' hidden')+'>'+codeIn+'</div>';
   } else ctl='<div class="sub"><input data-ach="'+i+'" list="dl-four" value="'+esc(a.choice)+'" placeholder="Fournisseur" aria-label="Fournisseur">'+codeIn+'</div>';
-  return '<div class="q'+(ok?' ok':'')+'" data-box="'+key+'"><div class="q-h"><b>'+esc(a.label)+'</b><span>'+(a.cands.length>1?'Quel fournisseur ?':'Pas dans le répertoire')+'<button type="button" class="qrm" data-qrm="'+i+'" title="Supprimer cette ligne" aria-label="Supprimer cette ligne">×</button></span></div>'+ctl+'</div>';
+  return '<div class="q'+(ok?' ok':'')+'" data-box="'+key+'"><div class="q-h"><b><input type="checkbox" class="sel" data-sel="'+i+'"'+(state.sel[i]?' checked':'')+' title="Choisir pour regrouper" aria-label="Choisir pour regrouper">'+esc(a.label)+'</b><span>'+(a.cands.length>1?'Quel fournisseur ?':'Pas dans le répertoire')+'<button type="button" class="qrm" data-qrm="'+i+'" title="Supprimer cette ligne" aria-label="Supprimer cette ligne">×</button></span></div>'+ctl+'</div>';
 }
 function showCode(i){ var c=document.querySelector('#todo [data-code="'+i+'"]'); if(c) c.hidden=!state.achats[i].choice; }
 function remaining(){ return document.querySelectorAll('#todo .q:not(.ok)').length; }
@@ -1230,6 +1240,23 @@ $('kv').addEventListener('input',function(e){ var k=e.target.dataset.k; if(k){ s
 $('buy').addEventListener('input',function(e){ var t=e.target, a=state.achats[+t.dataset.a]; if(!a) return; a[t.dataset.p]=t.value.trim()===''?'':t.value; writeAchats(); });
 $('buy').addEventListener('click',function(e){ var b=e.target.closest('[data-rm]'); if(!b) return; dropLine(+b.dataset.rm,'Ligne supprimée.'); });
 $('buy').addEventListener('change',function(e){ var t=e.target; if(t.dataset.p==='choice' && isStock(t.value)) dropLine(+t.dataset.a,'Stock AMS : ligne retirée.'); });
+/* regrouper des lignes d'une même commande fournisseur */
+function selIdx(){ return Object.keys(state.sel).filter(function(k){ return state.sel[k] && state.achats[k] && !state.achats[k].removed; }).map(Number).sort(function(a,b){ return a-b; }); }
+function updateMerge(){ var n=selIdx().length; $('mergebar').hidden=n<1; $('merge-n').textContent=n<2?'Cochez au moins 2 lignes':n+' lignes cochées'; $('btn-merge').disabled=n<2; $('btn-merge').style.opacity=n<2?.5:1; }
+document.addEventListener('change',function(e){ var c=e.target.closest('[data-sel]'); if(!c) return; state.sel[c.dataset.sel]=c.checked; updateMerge(); });
+document.addEventListener('click',function(e){ if(e.target.closest('[data-sel]')) e.stopPropagation(); },true);
+$('btn-unsel').onclick=function(){ state.sel={}; render(); };
+$('btn-merge').onclick=function(){
+  var idx=selIdx(); if(idx.length<2) return;
+  var L=idx.map(function(i){ return state.achats[i]; });
+  var sups=[]; L.forEach(function(a){ var c=String(a.choice||'').trim(); if(c && sups.indexOf(c)<0) sups.push(c); });
+  var codes=L.map(function(a){ return a.code; }).filter(Boolean);
+  var m={label:L.map(function(a){ return a.label; }).filter(Boolean).join(' + '), choice:sups[0]||'', code:codes.join(' / '), cands:[], ask:false, parts:idx, pos:idx[0]+0.5};
+  L.forEach(function(a){ a.removed=true; });
+  state.achats.push(m); state.sel={}; writeAchats(); render();
+  toast(sups.length>1?'Lignes regroupées. Attention : fournisseurs différents, '+sups[0]+' gardé.':'Lignes regroupées : une seule commande fournisseur.');
+};
+$('buy').addEventListener('click',function(e){ var u=e.target.closest('[data-unm]'); if(!u) return; var m=state.achats[+u.dataset.unm]; m.removed=true; (m.parts||[]).forEach(function(i){ state.achats[i].removed=false; }); writeAchats(); render(); toast('Lignes séparées.'); });
 $('btn-add').onclick=function(){
   state.achats.push({label:'',cands:[],choice:'',code:'',manual:true,ask:false}); writeAchats(); render();
   var f=document.querySelector('#buy input[data-a="'+(state.achats.length-1)+'"][data-p="label"]'); if(f) f.focus();
